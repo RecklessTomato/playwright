@@ -47,7 +47,4 @@ def scrape_exhibitors(url: str, selector: str, cards: str, name: str):
                     all_exhibitors.add(ex)
 
         browser.close()
-
-for name in sorted(all_exhibitors):
-    print(name)
-print(f"total exhibitor found: {len(all_exhibitors)}")
+    return all_exhibitors

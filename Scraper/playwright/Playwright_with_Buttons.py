@@ -3,7 +3,7 @@ import time
 from playwright.sync_api import sync_playwright, TimeoutError
 
 
-def scrape_exhibitors(url: str, more_btn: str, cards: str, name: str):
+def scrape_exhibitors(url: str, more_btn: str, card_selector: str, name_selector: str):
     all_exhibitors = set()
 
     with sync_playwright() as p:
@@ -13,11 +13,11 @@ def scrape_exhibitors(url: str, more_btn: str, cards: str, name: str):
         page.goto(url, wait_until="domcontentloaded", timeout=90000)
         time.sleep(5)
 
+        btn = page.locator(more_btn)
         max_attempts = 3
-
         while True:
 
-            if more_btn.count() == 0:
+            if btn.count() == 0:
                 print("no load-more-button detected")
                 break
 
@@ -26,9 +26,9 @@ def scrape_exhibitors(url: str, more_btn: str, cards: str, name: str):
             for attempt in range(max_attempts):
                 try:
                     print(f"Attempt {attempt + 1}: clicking on button")
-                    more_btn.first.scroll_into_view_if_needed()
+                    btn.first.scroll_into_view_if_needed()
                     time.sleep(1.5)
-                    more_btn.first.click(timeout=5000, force=True)
+                    btn.first.click(timeout=5000, force=True)
                     clicked = True
                     break
                 except TimeoutError:
@@ -43,18 +43,12 @@ def scrape_exhibitors(url: str, more_btn: str, cards: str, name: str):
 
             time.sleep(random.uniform(3.5, 5.0))
 
-            cards = page.query_selector_all(cards)
+            cards = page.query_selector_all(card_selector)
             print(f"{len(cards)} detected")
             for card in cards:
-                h2 = card.query_selector(name)
-                if h2:
-                    name = h2.inner_text().strip()
+                exhibitor = card.query_selector(name_selector)
+                if exhibitor:
+                    name = exhibitor.inner_text().strip()
                     if name:
                         all_exhibitors.add(name)
-
-        print(f"\n {len(all_exhibitors)} total exhibitor found")
-        browser.close()
-        for name in sorted(all_exhibitors):
-            print(name)
-
     return all_exhibitors
